@@ -3,7 +3,10 @@
 module Memoize
   def memoize(name, as: nil)
     unbound = instance_method(name)
+    has_args = unbound.arity.positive?
     cache = {}
+
+    raise ArgumentError, "can't memoize in variable when method has any args!" if as && has_args
 
     define_method name do |*args|
       if as

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Foo
+class Example
   extend Attributes
 
   define_attributes do
@@ -30,7 +30,7 @@ class Foo
 end
 
 # При отсутствии атрибута, помеченного как required! выдавать ошибку ArgumentError:
-# Foo.new(state: :running) => ArgumentError
+# Example.new(state: :running) => ArgumentError
 
 # Действия, перечисленные в actions должны быть преобразованы в методы объекта:
 # f.incr!
@@ -39,7 +39,7 @@ end
 # f.count => 0
 
 # default может принимать статичное значение или блок, выполняющийся при инициализации объекта
-# f = Foo.new(name: 'test')
+# f = Example.new(name: 'test')
 # f.started_at => 2022-12-01 13:43:18 +0300
 
 # enum создает методы проверки текущего состояния и его изменения

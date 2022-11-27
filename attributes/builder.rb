@@ -7,6 +7,7 @@ module Attributes
       @attributes = []
       @required_attributes = []
       @defaults = {}
+      @actions = {}
     end
 
     def required!
@@ -21,18 +22,13 @@ module Attributes
       attr = attributes.last
 
       values.each do |value|
-        @context.define_method("#{value}?".to_sym) do
-          __send__(attr) == value.to_sym
-        end
-
-        @context.define_method("#{value}!".to_sym) do
-          instance_variable_set("@#{attr}".to_sym, value.to_sym)
-        end
+        @actions["#{value}?".to_sym] = Proc.new { __send__(attr) == value.to_sym }
+        @actions["#{value}!".to_sym] = Proc.new { instance_variable_set("@#{attr}".to_sym, value.to_sym) }
       end
     end
 
-    def actions(&)
-      yield
+    def actions(&block)
+      instance_exec(&block)
     end
 
     def init
@@ -40,8 +36,10 @@ module Attributes
 
       @context.define_method(:initialize) do |**args|
         builder.attributes.each do |attr|
-          default = builder.defaults[attr].is_a?(Proc) ? builder.defaults[attr].call : builder.defaults[attr]
-          value = args[attr] || default
+          default = builder.defaults[attr]
+          value = args.fetch(attr) do
+            default.is_a?(Proc) ? default.call : default
+          end
           
           instance_variable_set("@#{attr}".to_sym, value)
           self.class.attr_reader(attr)
@@ -49,16 +47,14 @@ module Attributes
           raise ArgumentError, "Attribute '#{attr}' is required!" if builder.required_attributes.include?(attr) && !args[attr]
         end
       end
-    end
 
-    def method_missing(name, &block)
-      @context.define_method(name) do
-        instance_exec(&block)
+      @actions.each do |name, block|
+        @context.define_method(name, &block)
       end
     end
 
-    def respond_to_missing?(name)
-      respond_to?(name)
+    def method_missing(name, &block)
+      @actions[name] = block
     end
   end
 end

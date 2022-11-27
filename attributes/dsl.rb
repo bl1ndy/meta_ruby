@@ -8,10 +8,6 @@ module Attributes
           builder.attributes << name
           builder.instance_exec(&block)
         end
-
-        define_method(:respond_to_missing?) do |name|
-          builder.respond_to?(name)
-        end
       end
     end
   end
